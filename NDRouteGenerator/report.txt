@@ -1,0 +1,118 @@
+Nick LaRosa
+Eric Krakowiak
+
+USAGE: "./NDroutes NDnodes"
+
+Final Lab
+
+From the user's perspective, the program first displays a menu explaining what to do.  It prompts the user to enter the distance they wish to run, between 0 and 5 miles.  If they enter a distance outside of this range, they are prompted to please try again.  After they enter a valid distance, a graphics window is opened with green circles, each corresponding to location on Notre Dame's campus.  All of the possible connections between nodes are shown by white lines on the screen, which help to give the user a sense of possible routes, and also help establish a sense of direction and location regarding the nodes.  The user clicks the location they would like to start at, and that location is filled in green.  They next click the location they would like to end at, and that circle is filled in red.  If they choose to end at the same location they start, the circle is filled in green with a thick red outline.  If they choose a distance that is too small for the start and end locations they chose, they are told that a route could not be found and given a suggestion to input a longer distance.  When a route is found that starts and ends at the chosen location and has a distance close to the distance the user chose, a blue path is drawn on the screen for the user to see.  The locations are connected by blue lines, and the number assigned to each location is printed below.  A list of directions is printed in the terminal to tell the user the order in which to travel the nodes.
+
+From the programmers perspective, the program is composed of many functions, most of which operate on an array of node structures.
+
+Each node structure consists of a number and a length.  This information means that the node is connected to the node <number> and the distance till node <number> is length.  The number of the node itself is stored by its location in the array.
+
+
+PATH FUNCTIONS
+
+getUserInput is used to get the distance the user wants to travel.  If the user enters a number less than 0 or greater than 5, it calls itself to request another distance be entered.
+countNodes opens the file containing the node information, such as what the node is connected to, the length of these connections, and the coordinates of each node.  countNodes counts the number of nodes that are contained in the file, while createNodes places all of this information into the proper node structure in the array of nodes.
+
+notRepeat checks to see if the node being traveled to is the same as the node that the path was at 2 nodes ago.  This would correspond to going back to the node that was just left.  It returns 1 if the node is not the same, and 0 if it is.
+findNextNode generates a random next branch for the path to take.  It places this next node on the node path then checks to make sure it is not a repeat by calling notRepeat.  If it is not, it returns the distance to this next node, and if it is, it repeats the process of choosing a random branch to follow.
+
+straightDistance calculates the straight line distance between two points by using the distance formula on the coordinates for the locations.
+findCloser evaluates the straightDistance to each of the nodes adjacent to the current node and chooses the one with the smallest straight line distance. It then places this node on the nodePath array and returns the distance to the node it chose from the current node.
+
+checkLastNode checks to see if the current node is the same as the end node.  It returns 1 if they are the same and 0 if they are not the same.
+checkDistance compares the distance travelled to the desired distance entered by the user.  It returns 0 if the distance travelled is too small, -1 if it is to large, and 1 if the distance travelled is within 10% of the desired distance.
+
+findPath first calls findNextNode to generate a random path for the beginning of the route. It keeps track of the distance travelled by adding the values returned by findNextNode to a running total. After the distance travelled is more than half of the distance the user requested, findPath switches to calling findCloser, so that it starts moving back towards the start node. It calls findCloser until the distance travelled is to far, indicated by checkDistance returning -1. If while findPath is calling findCloser, checkDistance returns 1 and checkLastNode returns one, this indicates that the path is of the right length and is at the chosen end node, so the number of nodes in this path is returned.  If checkDistance and checkLastNode dont simutaneaously return 1 before checkDistance returns -1, findPath returns 0, indicating no path was found.
+
+findCorrectPath is a while loop that calls findPath.  After calling findPath 100 times, if no path is found, findCorrectPath returns 0, indicating that no path could be found that met all of the inputted conditions.
+
+
+GRAPHICS FUNCTIONS
+
+drawCurve uses a for loop to draw a circle.  It increments the angle a small amount each time through and draws a line to connect the points on the 
+outside of the circle, which are created by using sin and cos from the math library.
+
+fillCircle creates a filled in circle by using a for loop to draw circles starting with radius 0, and increasing the radius by a small amount up 
+until the desired radius of the filled in circle.
+
+drawNodes uses the coordinates array to draw a circle with radius 5 pixels centered around the location of each node.  It calls drawCurve to draw the 
+circle, and colors it green, but not filled in.
+
+selectStart checks to see if the location the user clicked corresponds to one of the nodes.  It uses a for loop to check each node to see if it was 
+chosed.  If the user clicks in a 10 by 10 invisible box centered around the location of the node, the program interprets that as the user selecting 
+that node.  This is to give the user a little wiggle room when selecting nodes so that they do not need to click in the exact location.  It then 
+calls fillCircle to color in the node the user selected green, and returns the number of the node that was selected.
+
+selectEnd does the same thing as select start to check if the user selected a node. If the node that is chosen is different than the start node, it 
+calls fillCircle to color the node red.  If the node is the same as the start node, it fills in the center of the circle green with a thick red 
+outline around it.  In both cases, it returns the number of the node that was selected.
+
+The "drawBranches" function works recursively to print all the connections between nodes. When called intially, this completes the map diagram that 
+is presented to the user before and after the user selects their start and end nodes. This function searches the "branches" array for the number of 
+branches that a current node contains. Then, for each of these branches, gfx_line connects the current node and each branching node. Also, for each 
+branch, "drawBranches" is called recursively with the branching node as the new current node. Every time the "drawBranches" function is called, the 
+incrementing variable "count" is passed along. Because of the difficult time creating a base case for this recursive function (because it is 
+difficult to determine when all connections between nodes have been made), the "drawBranches" function returns (ends) when this count reaches a 
+specific value. As a group we had to experiment with different values for this maximum "count" value so that all connections could be made without 
+causing excess calls to "drawBranches". It is also worthy to note that the previous node is also passed along with "drawBranches", which prevents the 
+function from calling itself on the node previous. If the function could be called on the previous node (on which it was already called), an infinite 
+function call list would occur. Thus, although this recursive function's base case was somewhat experimental, it turned out to work nicely and help 
+the user visualize Notre Dame's campus.
+
+The "labelNodes" function utilizes the "display_number" function in order to print a node's number at its position within the graphics window. This 
+involves retrieving the node's coordinates from the "coordinates" array and lining up the displayed number nicely with the node's original green 
+circle. This node labels are applied only to those nodes within the user's path as to avoid confusion. Additionally, they are displayed in yellow. 
+
+printPath lists all the nodes from nodePath that the user travels through.  It uses a for loop to loop through the values stored in nodePath up until 
+numberNodes, which is the number of nodes returned by findCorrectPath.  It prints these nodes in order in the terminal with arrows so that the user 
+can clearly see the correct order to travel through the nodes.
+
+drawPath connects the coordinates in the graphics window of the nodes that are being traversed.  It loops through the nodePath array and uses the 
+node numbers to find the corresponding coordinates for each node.  It then calls gfx_line to draw a blue line connecting each pair of consecutive 
+nodes so the user can see a clear visual representation of the path they will be running.
+
+NUMBER DRAWING FUNCTIONS
+
+Each draw_# function operates in a similar way.  It draws the number in the name of the function at the inputted location with the inputted height.  Each number has a width equal to half of its height to make the ratio of each number look consistent.  To draw the numbers, the functions call gfx_line and draw curve.
+
+draw_digit draws the inputted digit at the input location with the input height.  It does this by using a switch to go to the case that calls the draw_# function that corresponds to the input number.
+
+draw_number draws a number 0-999 by calling draw_digit reapeated times.  It uses the mod operator and the divide operator on ints to isolate the proper digit to print in each of the spots, ie the hundreds, tens, and ones.  If the leading digit is a zero, the function uses an if statement to detect this and not print it.
+
+MAIN FUNCTION
+
+Within the main function of this program, the user's command-line arguments are first recorded within the argv array. If the user fails to provide 
+the one file argument required, they are notified of the necessary inputs. This file provided by the user contains the node data for the map being 
+displayed. In our case, this file is "NDnodes" which contains specially-formatted data. Using the "countNodes" function, the total number of nodes 
+represented through this file data is retrieved, and using this number, arrays can be allocated to hold onto this data. Using malloc, an array of 
+Node structures and two integer arrays are created. This first array of Node structures "ourNodes" acts as a multidimensional array by having the 
+first ten elements grouped as the 0-th indexed Node, the second ten elements grouped as the 1-st indexed Node, and so on. The respective index of 
+each Node (for use with this one-dimensional array) is retrieved through the "nodeIndex" function. This array is filled through the file parsing 
+function "createNodes". Another array is created ("branches") to contain the branching elements of each Node. Lastly, the array "coordinates" 
+contains the coordinate data of each Node and in the same way as "ourNodes" acts as a multi-dimensional array.
+
+After these arrays at initialized on the heap, variables are initialized and instructions are printed. At this time, user input (in this case, length 
+of their generated route) is gathered through the "getUserInput" function. Once this is gathered in the correct format, a graphics window is opened 
+and a while loop begins to continually run through. At first, after functions "drawBranches" and "drawNodes" functions are called, this graphics 
+window contains a map of Notre Dame campus with selectable Nodes highlighted in green. This while loop continues until the user selects both its 
+starting and end nodes through the "selectStart" and "selectEnd" functions. These points are selected via mouse click when "gfx_wait" equals 1. At 
+that point, "findCorrectPath" can be called, which begins the actual path generation. If this function returns 0, which means more than 100 attempts 
+at path generation were used, a path is not found (most likely because the user's distance was too short for any path) and the program is exited. 
+Otherwise, the while loop exits and allows the "printPath" function to print the entire Node path to the screen. After this is completed, another 
+while loop begins, this time printing the path (in blue) using the "drawPath" function. Throughout both while loops, "gfx_event_waiting" is evaluated 
+to true whenever the user presses any button. Thus, whenever the user presses the 'q' button, the graphics window is closed and the program is 
+exited. This concludes the functionality of the main function.
+
+VERIFYING OUTPUT
+
+Verifying the output of this program involved many intermediate steps of checking values and parameters. For example, we had to make sure the routes
+were of correct distance and ended in the correct location. This involved printing node values and lengths while attempting to generate routes.
+Additionally, we had to make sure that the paths were not getting stuck in repetitive structure by printing out the entire node paths at every
+attempt to create a route. Graphically speaking, we had to make sure that the user's mouse input led to the correct nodes being selected and entered
+into our route generating algorithm. Making sure the correct nodes were finally highlighted also fit into this category. Lastly, it helped to have a
+physical drawing of our nodes that could be referenced to make sure the path nodes were all truly connected and that the distances were correct.
+Overall, we think our program runs very well and has much room for additional features in the future.
